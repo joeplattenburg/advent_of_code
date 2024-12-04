@@ -35,6 +35,13 @@ def safe_access(
     return ''.join(subset.reshape(-1))
 
 
+def is_xmas(i: int, j: int, mat: np.ndarray) -> bool:
+    check = mat[(i - 1):(i + 2), (j - 1):(j + 2)]
+    if check.shape != (3, 3):
+        return False
+    return {check[0, 0], check[2, 2]} == {check[2, 0], check[0, 2]} == {'M', 'S'}
+
+
 if __name__ == "__main__":
     input_path = sys.argv[1]
     input_ = []
@@ -43,11 +50,12 @@ if __name__ == "__main__":
             input_.append([c for c in line.strip()])
     mat = np.array(input_)
     rows, cols = mat.shape
-    counter = 0
+    counter1, counter2 = 0, 0
     for i in range(rows):
         for j in range(cols):
             if mat[i, j] == 'X':
-                counter += get_count_at_index(i, j, mat)
-    print(f'Part 1: {counter}')
-    part2 = 0
-    print(f'Part 2: {part2}')
+                counter1 += get_count_at_index(i, j, mat)
+            if mat[i, j] == 'A':
+                counter2 += int(is_xmas(i, j, mat))
+    print(f'Part 1: {counter1}')
+    print(f'Part 2: {counter2}')
