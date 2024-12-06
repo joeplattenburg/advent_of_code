@@ -1,5 +1,10 @@
+from copy import deepcopy
 import sys
 import numpy as np
+
+
+class LoopError(Exception):
+    pass
 
 
 class Grid:
@@ -50,17 +55,41 @@ class Grid:
     def count_locations(self) -> int:
         return int((self.grid == 'X').sum())
 
+    def open_locations(self) -> list[tuple[int, int]]:
+        return [tuple(t) for t in np.argwhere(self.grid == '.').tolist()]
+
+    def walk(self, cutoff=100000):
+        counter = 0
+        while self.loc_on_grid:
+            self.take_step()
+            counter += 1
+            if counter >= cutoff:
+                raise LoopError
+
 
 if __name__ == "__main__":
     input_path = sys.argv[1]
-    grid = []
+    original_array = []
     with open(input_path, 'r') as f:
         for line in f.readlines():
-            grid.append([c for c in line.strip()])
-    grid = Grid(np.array(grid))
-    while grid.loc_on_grid:
-        grid.take_step()
+            original_array.append([c for c in line.strip()])
+    original_array = np.array(original_array)
+    grid = Grid(deepcopy(original_array))
+    grid.walk()
     part1 = grid.count_locations()
+    print('Part 1 done')
+
     part2 = 0
+    grid = Grid(original_array)
+    open_locs = grid.open_locations()
+    for i, loc in enumerate(grid.open_locations()):
+        print(f'Testing loc {i + 1} of {len(open_locs)}...')
+        new_array = deepcopy(original_array)
+        new_array[*loc] = '#'
+        new_grid = Grid(new_array)
+        try:
+            new_grid.walk(cutoff=100000)
+        except LoopError:
+            part2 += 1
     print(f'Part 1: {part1}')
     print(f'Part 2: {part2}')
