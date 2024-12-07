@@ -13,6 +13,7 @@ class Grid:
         x, y = np.where(starting_loc_ind)
         self.loc = int(x[0]), int(y[0])
         self.history = [(self.loc, self.direction)]
+        self.unique_states = {(self.loc, self.direction)}
         self.grid = grid
         self.original_grid = deepcopy(grid)
         self.loc_on_grid = True
@@ -36,9 +37,10 @@ class Grid:
                 self.grid[*self.loc] = 'X'
                 self.loc = test_loc
             self.grid[*self.loc] = self.direction
-            if (self.loc, self.direction) in self.history:
+            if (self.loc, self.direction) in self.unique_states:
                 self.loop = True
             self.history.append((self.loc, self.direction))
+            self.unique_states.add((self.loc, self.direction))
         else:
             self.grid[*self.loc] = 'X'
             self.loc_on_grid = False
@@ -64,6 +66,7 @@ class Grid:
     def reset(self):
         self.loc, self.direction = self.history[0]
         self.history = [(self.loc, self.direction)]
+        self.unique_states = {(self.loc, self.direction)}
         self.grid = deepcopy(self.original_grid)
         self.loc_on_grid = True
         self.loop = False
