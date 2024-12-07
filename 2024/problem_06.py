@@ -4,10 +4,11 @@ import numpy as np
 
 
 class Grid:
-    directions = ['^', '>', 'v', '<']
+    direction_map = {'^': (-1, 0), '>': (0, 1), 'v': (1, 0), '<': (0, -1)}
+    directions = list(direction_map.keys())
 
     def __init__(self, grid: np.ndarray) -> None:
-        starting_loc_ind = (grid == '^') | (grid == 'v') | (grid == '<') | (grid == '>')
+        starting_loc_ind = np.isin(grid, self.directions)
         assert starting_loc_ind.sum() == 1
         self.direction: str = str(grid[starting_loc_ind][0])
         x, y = np.where(starting_loc_ind)
@@ -20,16 +21,8 @@ class Grid:
         self.loop = False
 
     def take_step(self) -> None:
-        if self.direction == '^':
-            test_loc = self.loc[0] - 1, self.loc[1]
-        elif self.direction == 'v':
-            test_loc = self.loc[0] + 1, self.loc[1]
-        elif self.direction == '>':
-            test_loc = self.loc[0], self.loc[1] + 1
-        elif self.direction == '<':
-            test_loc = self.loc[0], self.loc[1] - 1
-        else:
-            raise Exception('wat')
+        move_x, move_y = self.direction_map[self.direction]
+        test_loc = self.loc[0] + move_x, self.loc[1] + move_y
         if self.is_loc_on_grid(test_loc):
             if self.grid[*test_loc] == '#':
                 self.turn_right()
@@ -49,7 +42,7 @@ class Grid:
     def is_loc_on_grid(self, loc: tuple[int, int]) -> bool:
         return (loc[0] >= 0) and (loc[0] < self.grid.shape[0]) and (loc[1] >= 0) and (loc[1] < self.grid.shape[1])
 
-    def turn_right(self):
+    def turn_right(self) -> None:
         self.direction = self.directions[(self.directions.index(self.direction) + 1) % len(self.directions)]
 
     def print(self) -> None:
@@ -59,9 +52,12 @@ class Grid:
     def count_locations(self) -> int:
         return int((self.grid == 'X').sum())
 
-    def walk(self):
+    def walk(self) -> None:
         while self.loc_on_grid and not self.loop:
             self.take_step()
+
+    def add_obstruction(self, loc: tuple[int, int]) -> None:
+        grid.grid[*loc] = '#'
 
     def reset(self):
         self.loc, self.direction = self.history[0]
@@ -87,7 +83,7 @@ if __name__ == "__main__":
     for i, loc in enumerate(test_locs):
         print(f'Testing loc {i + 1} of {len(test_locs)}...')
         grid.reset()
-        grid.grid[*loc] = '#'
+        grid.add_obstruction(loc)
         grid.walk()
         if grid.loop:
             part2 += 1
