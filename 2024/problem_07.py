@@ -1,5 +1,5 @@
 import sys
-from itertools import product
+from operator import add, mul
 
 
 def parse_line(line: str) -> tuple[int, list[int]]:
@@ -9,21 +9,22 @@ def parse_line(line: str) -> tuple[int, list[int]]:
     return result, inputs
 
 
-def is_possible(result: int, inputs: list[int], operators: list[str], required: str | None = None) -> bool:
-    operator_combs = list(product(operators, repeat=len(inputs) - 1))
-    if required:
-        operator_combs = [o for o in operator_combs if required in o]
-    for operator_comb in operator_combs:
-        if eval_statement(inputs, operator_comb) == result:
+def concat(a: int, b: int) -> int:
+    return int(str(a) + str(b))
+
+
+def is_possible(result: int, inputs: list[int], operators: list[callable]) -> bool:
+    if len(inputs) == 1:
+        if result == inputs[0]:
             return True
+    else:
+        for op in operators:
+            new_val = op(inputs[0], inputs[1])
+            if new_val > result:
+                return False
+            if is_possible(result, [new_val, *inputs[2:]], operators=operators):
+                return True
     return False
-
-
-def eval_statement(inputs: list[int], operators: list[str]) -> str:
-    value = inputs[0]
-    for operator, next_value in zip(operators, inputs[1:]):
-        value = eval(str(value) + operator + str(next_value))
-    return value
 
 
 if __name__ == "__main__":
@@ -33,10 +34,9 @@ if __name__ == "__main__":
     with open(input_path, 'r') as f:
         for line in f.readlines():
             result, inputs = parse_line(line.strip())
-            if is_possible(result, inputs, operators=['*', '+']):
+            if is_possible(result, inputs, operators=[add, mul]):
                 part1 += result
-                part2 += result
-            elif is_possible(result, inputs, operators=['*', '+', ''], required=''):
+            if is_possible(result, inputs, operators=[add, mul, concat]):
                 part2 += result
     print(f'Part 1: {part1}')
     print(f'Part 2: {part2}')
