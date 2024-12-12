@@ -1,17 +1,16 @@
 import sys
+from functools import cache
 
 
-def stone_count_after_blinks(stone: int, n_blinks: int = 1, total: int = 0):
-    if n_blinks == 0:
+@cache
+def blink(stone: int, n_times: int = 1) -> int:
+    if n_times == 0:
         return 1
     else:
-        new_stones = blink(stone)
-        for new_stone in new_stones:
-            total += stone_count_after_blinks(new_stone, n_blinks - 1)
-        return total
+        return sum(blink(new_stone, n_times - 1) for new_stone in _blink(stone))
 
 
-def blink(stone: int) -> list[int]:
+def _blink(stone: int) -> list[int]:
     if stone == 0:
         return [1]
     elif len(stone_str := str(stone)) % 2 == 0:
@@ -25,7 +24,7 @@ if __name__ == "__main__":
     input_path = sys.argv[1]
     with open(input_path, 'r') as f:
         stones = [int(c) for c in f.read().strip().split()]
-    part1 = sum(stone_count_after_blinks(stone, n_blinks=25) for stone in stones)
+    part1 = sum(blink(stone, n_times=25) for stone in stones)
     print(f'Part 1: {part1}')
-    part2 = sum(stone_count_after_blinks(stone, n_blinks=75) for stone in stones)
+    part2 = sum(blink(stone, n_times=75) for stone in stones)
     print(f'Part 2: {part2}')
