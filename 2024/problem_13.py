@@ -1,4 +1,5 @@
 import sys
+import numpy as np
 from dataclasses import dataclass
 
 
@@ -20,16 +21,21 @@ def parse_input(path: str) -> list[Machine]:
     return out
 
 
-def get_solutions(m: Machine) -> list[tuple[int, int, int]]:
-    out = []
-    for i in range(100):
-        for j in range(100):
-            loc = i * m.a + j * m.b
-            if loc == m.prize:
-                out.append((i, j, i * 3 + j))
-            elif abs(loc) > abs(m.prize):
-                break
-    return out
+def decompose_into_basis(a: complex, b: complex, v: complex) -> tuple[float, float]:
+    A = np.array([[a.real, b.real], [a.imag, b.imag]])
+    V = np.array([v.real, v.imag])
+    aa, bb = np.linalg.solve(A, V)
+    return float(aa), float(bb)
+
+
+def decompose_into_basis_(a: complex, b: complex, v: complex) -> tuple[float, float]:
+    b_coef = (v.imag - (a.imag / a.real) * v.real) / (b.imag - b.real * (a.imag / a.real))
+    a_coef = (v.real - b.real * b_coef) / a.real
+    return a_coef, b_coef
+
+
+def is_valid(t: tuple[float, float]) -> bool:
+    return t[0] > 0 and t[1] > 0 and (abs(t[0] - np.round(t[0])) < 1e-8) and (abs(t[1] - np.round(t[1])) < 1e-8)
 
 
 def parse_helper(s: str, char: str) -> complex:
@@ -42,8 +48,11 @@ if __name__ == "__main__":
     machines = parse_input(input_path)
     part1, part2 = 0, 0
     for machine in machines:
-        solutions = get_solutions(machine)
-        if solutions:
-            part1 += sorted(solutions, key=lambda x: x[2])[0][2]
+        solution1 = decompose_into_basis_(machine.a, machine.b, machine.prize)
+        if is_valid(solution1):
+            part1 += int(np.round(solution1[0]) * 3 + np.round(solution1[1]))
+        solution2 = decompose_into_basis_(machine.a, machine.b, machine.prize + complex(10000000000000, 10000000000000))
+        if is_valid(solution2):
+            part2 += int(np.round(solution2[0]) * 3 + np.round(solution2[1]))
     print(f'Part 1: {part1}')
     print(f'Part 2: {part2}')
