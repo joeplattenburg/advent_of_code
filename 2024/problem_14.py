@@ -1,6 +1,8 @@
 import sys
-from collections import Counter
 from math import prod
+from collections import Counter
+
+import numpy as np
 
 
 class Robot:
@@ -22,7 +24,7 @@ class Robot:
         return Robot((int(px), int(py)), (int(vx), int(vy)))
 
 
-def count_quatrants(screen_size: tuple[int, int], locs: dict[tuple[int, int], int]) -> int:
+def count_quadrants(screen_size: tuple[int, int], locs: dict[tuple[int, int], int]) -> int:
     quadrants = {i: 0 for i in range(4)}
     for loc, count in locs.items():
         if loc[0] < (screen_size[0] // 2):
@@ -35,21 +37,38 @@ def count_quatrants(screen_size: tuple[int, int], locs: dict[tuple[int, int], in
                 quadrants[2] += count
             elif loc[1] > (screen_size[1] // 2):
                 quadrants[3] += count
-    print(quadrants)
     return prod(quadrants.values())
+
+
+def print_screen(screen: np.ndarray, counter: int) -> bool:
+    check = any(['0000000000' in ''.join(screen[i, :].tolist()) for i in range(screen.shape[0])])
+    if check:
+        for i in range(screen.shape[0]):
+            print(''.join(screen[i, :].tolist()))
+    return check
 
 
 if __name__ == "__main__":
     input_path = sys.argv[1]
-    robots = {}
+    robots = []
     with open(input_path, 'r') as f:
-        for i, line in enumerate(f.readlines()):
-            robots[i] = Robot.from_string(line)
-    part1, part2 = 0, 0
+        for line in f.readlines():
+            robots.append(Robot.from_string(line))
     screen_size = (101, 103)
-    for i, robot in robots.items():
-        robot.move(duration=100, screen_size=screen_size)
-    locs = Counter(robot.position for robot in robots.values())
-    part1 = count_quatrants(screen_size, locs)
+    counter = 0
+    found = False
+    while not found:
+        if counter == 100:
+            locs = Counter(robot.position for robot in robots)
+            part1 = count_quadrants(screen_size, locs)
+        screen = np.full((screen_size[1], screen_size[0]), '.')
+        for robot in robots:
+            screen[robot.position[1], robot.position[0]] = '0'
+        found = print_screen(screen, counter)
+        if found:
+            part2 = counter
+        for robot in robots:
+            robot.move(duration=1, screen_size=screen_size)
+        counter += 1
     print(f'Part 1: {part1}')
     print(f'Part 2: {part2}')
