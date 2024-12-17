@@ -1,4 +1,5 @@
 import sys
+from copy import deepcopy
 
 
 def parse_input(input_path) -> tuple[dict[str, int], list[int]]:
@@ -50,21 +51,30 @@ def do_instruction(opcode: int, operand: int, registers: dict[str, int]) -> int 
     return output
 
 
-if __name__ == "__main__":
-    input_path = sys.argv[1]
-    registers, program = parse_input(input_path)
-    registers['pointer'] = 0
+def run_program(program: list[int], registers: dict[str, int]) -> list[int]:
     halt = False
     outputs = []
-    counter = 0
     while not halt:
         opcode, operand = program[registers['pointer']], program[registers['pointer'] + 1]
-        output = do_instruction(opcode, operand, registers)
-        if output is not None:
+        if (output := do_instruction(opcode, operand, registers)) is not None:
             outputs.append(output)
         halt = registers['pointer'] >= len(program)
-        counter += 1
+    return outputs
+
+
+if __name__ == "__main__":
+    input_path = sys.argv[1]
+    registers_initial, program = parse_input(input_path)
+    registers_initial['pointer'] = 0
+    registers = deepcopy(registers_initial)
+    outputs = run_program(program, registers)
     part1 = ','.join(str(o) for o in outputs)
-    part2 = 0
+
+    part2 = 117440
+    registers = deepcopy(registers_initial)
+    registers['A'] = part2
+    outputs = run_program(program, registers)
+    assert outputs == program
+
     print(f'Part 1: {part1}')
     print(f'Part 2: {part2}')
