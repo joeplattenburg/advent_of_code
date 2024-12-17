@@ -1,6 +1,9 @@
 import sys
+from copy import deepcopy
 
 import numpy as np
+
+Coord = tuple[int, int]
 
 
 class Grid:
@@ -8,34 +11,36 @@ class Grid:
     def __init__(self, grid: np.ndarray):
         self.grid = grid
 
-    def robot_index(self) -> tuple[int, int]:
+    def robot_index(self) -> Coord:
         return tuple(np.argwhere(self.grid == '@')[0])
 
     def update_grid(self, instruction: str) -> None:
         direction = self.instruction_map[instruction]
-        start = self.robot_index()
-        end = self.get_first_non_box(direction)
-        if self.grid[*end] == '.':
-            if instruction == '>':
-                self.grid[start[0], (start[1] + 1):(end[1] + 1)] = self.grid[start[0], start[1]:end[1]]
-            elif instruction == '<':
-                end1 = end[1] - 1 if end[1] - 1 >= 0 else None
-                self.grid[start[0], (start[1] - 1):end1:-1] = self.grid[start[0], start[1]:end[1]:-1]
-            elif instruction == 'v':
-                self.grid[(start[0] + 1):(end[0] + 1), start[1]] = self.grid[start[0]:end[0], start[1]]
-            elif instruction == '^':
-                end1 = end[0] - 1 if end[0] - 1 >= 0 else None
-                self.grid[(start[0] - 1):end1:-1, start[1]] = self.grid[start[0]:(end[0]):-1, start[1]]
-            self.grid[*start] = '.'
+        current_loc = self.robot_index()
+        inds_to_move = self.movable_inds(direction)
+        if inds_to_move:
+            for ind in reversed(inds_to_move):
+                new_ind = ind[0] + direction[0], ind[1] + direction[1]
+                self.grid[*new_ind] = self.grid[*ind]
+            self.grid[*current_loc] = '.'
 
-    def get_first_non_box(self, direction: tuple[int, int]) -> tuple[int, int]:
-        loc = self.robot_index()
-        stop = False
-        while not stop:
-            loc = loc[0] + direction[0], + loc[1] + direction[1]
-            if self.grid[*loc] != 'O':
-                stop = True
-        return loc
+    def movable_inds(self, direction: Coord, accumulated: list[Coord] | None = None) -> list[Coord]:
+        accumulated = accumulated or [self.robot_index()]
+        leading_edge = self.get_leading_edge(accumulated, direction)
+        current_coord = leading_edge[0]
+        check_coord = current_coord[0] + direction[0], + current_coord[1] + direction[1]
+        check_val = self.grid[*check_coord]
+        if check_val == '#':
+            return []
+        elif check_val == '.':
+            return accumulated
+        else:
+            accumulated.append(check_coord)
+            return self.movable_inds(direction, accumulated)
+
+    @staticmethod
+    def get_leading_edge(coords: list[Coord], direction: Coord) -> list[Coord]:
+        return [coords[-1]]
 
     def print_grid(self):
         for i in range(self.grid.shape[0]):
@@ -44,6 +49,7 @@ class Grid:
     def sum_coords(self) -> int:
         return sum(i * 100 + j for i, j in np.argwhere(self.grid == 'O'))
 
+
 def parse_input(input_path: str) -> tuple[Grid, str]:
     with open(input_path, 'r') as f:
         grid_string, instructions = f.read().split('\n\n')
@@ -51,6 +57,18 @@ def parse_input(input_path: str) -> tuple[Grid, str]:
     for line in grid_string.split('\n'):
         grid.append([c for c in line.strip()])
     return Grid(np.array(grid)), instructions.strip().replace('\n', '')
+
+
+def widen_grid(grid: np.ndarray) -> np.ndarray:
+    mapper = {'#': '##', 'O': '[]', '.': '..', '@': '@.'}
+    new_grid = np.empty(shape=(grid.shape[0], 2 * grid.shape[1]), dtype=str)
+    for i in range(grid.shape[0]):
+        for j in range(grid.shape[1]):
+            old = grid[i, j]
+            new = mapper[old]
+            new_grid[i, 2 * j] = new[0]
+            new_grid[i, 2 * j + 1] = new[1]
+    return new_grid
 
 
 if __name__ == "__main__":
