@@ -16,38 +16,60 @@ class Grid:
 
     def update_grid(self, instruction: str) -> None:
         direction = self.instruction_map[instruction]
-        current_loc = self.robot_index()
         inds_to_move = self.movable_inds(direction)
         if inds_to_move:
-            for ind in reversed(inds_to_move):
+            grid_copy = deepcopy(self.grid)
+            for ind in inds_to_move:
+                self.grid[*ind] = '.'
+            for ind in inds_to_move:
                 new_ind = ind[0] + direction[0], ind[1] + direction[1]
-                self.grid[*new_ind] = self.grid[*ind]
-            self.grid[*current_loc] = '.'
+                self.grid[*new_ind] = grid_copy[*ind]
 
-    def movable_inds(self, direction: Coord, accumulated: list[Coord] | None = None) -> list[Coord]:
+    def movable_inds(self, direction: Coord, accumulated: list[Coord] | None = None, leading_edge_size: int = 1) -> list[Coord]:
         accumulated = accumulated or [self.robot_index()]
-        leading_edge = self.get_leading_edge(accumulated, direction)
-        current_coord = leading_edge[0]
-        check_coord = current_coord[0] + direction[0], + current_coord[1] + direction[1]
-        check_val = self.grid[*check_coord]
-        if check_val == '#':
-            return []
-        elif check_val == '.':
+        leading_edge = self.get_leading_edge(accumulated, direction, leading_edge_size)
+        new_leading_edge = set()
+        for coord in leading_edge:
+            check_coord = coord[0] + direction[0], + coord[1] + direction[1]
+            check_val = self.grid[*check_coord]
+            # If there are any walls along the leading edge, nothing can move
+            if check_val == '#':
+                return []
+            elif check_val == '.':
+                continue
+            elif check_val == 'O':
+                new_leading_edge.add(check_coord)
+            elif check_val == '[':
+                # up or down, both halves of box are on leading edge
+                if direction[1] == 0:
+                    new_leading_edge.add(check_coord)
+                    new_leading_edge.add((check_coord[0], check_coord[1] + 1))
+                else:
+                    accumulated.append(check_coord)
+                    new_leading_edge.add((check_coord[0], check_coord[1] + 1))
+            elif check_val == ']':
+                if direction[1] == 0:
+                    new_leading_edge.add(check_coord)
+                    new_leading_edge.add((check_coord[0], check_coord[1] - 1))
+                else:
+                    accumulated.append(check_coord)
+                    new_leading_edge.add((check_coord[0], check_coord[1] - 1))
+        accumulated += list(new_leading_edge)
+        if not new_leading_edge:
             return accumulated
         else:
-            accumulated.append(check_coord)
-            return self.movable_inds(direction, accumulated)
+            return self.movable_inds(direction, accumulated, leading_edge_size=len(new_leading_edge))
 
     @staticmethod
-    def get_leading_edge(coords: list[Coord], direction: Coord) -> list[Coord]:
-        return [coords[-1]]
+    def get_leading_edge(coords: list[Coord], leading_edge_size: int) -> list[Coord]:
+        return coords[-leading_edge_size:]
 
     def print_grid(self):
         for i in range(self.grid.shape[0]):
             print(''.join(self.grid[i, :].tolist()))
 
     def sum_coords(self) -> int:
-        return sum(i * 100 + j for i, j in np.argwhere(self.grid == 'O'))
+        return sum(i * 100 + j for i, j in np.argwhere(np.isin(self.grid, ['O', '['])))
 
 
 def parse_input(input_path: str) -> tuple[Grid, str]:
@@ -74,8 +96,11 @@ def widen_grid(grid: np.ndarray) -> np.ndarray:
 if __name__ == "__main__":
     input_path = sys.argv[1]
     grid, instructions = parse_input(input_path)
-    grid.print_grid()
-    for i, instruction in enumerate(instructions):
+    grid2 = Grid(widen_grid(deepcopy(grid.grid)))
+    #grid2.print_grid()
+    for instruction in instructions:
         grid.update_grid(instruction)
-    grid.print_grid()
+        grid2.update_grid(instruction)
+    #grid2.print_grid()
     print(f'Part 1: {grid.sum_coords()}')
+    print(f'Part 1: {grid2.sum_coords()}')
