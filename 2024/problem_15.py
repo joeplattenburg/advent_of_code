@@ -27,7 +27,7 @@ class Grid:
 
     def movable_inds(self, direction: Coord, accumulated: list[Coord] | None = None, leading_edge_size: int = 1) -> list[Coord]:
         accumulated = accumulated or [self.robot_index()]
-        leading_edge = self.get_leading_edge(accumulated, direction, leading_edge_size)
+        leading_edge = accumulated[-leading_edge_size:]
         new_leading_edge = set()
         for coord in leading_edge:
             check_coord = coord[0] + direction[0], + coord[1] + direction[1]
@@ -59,10 +59,6 @@ class Grid:
             return accumulated
         else:
             return self.movable_inds(direction, accumulated, leading_edge_size=len(new_leading_edge))
-
-    @staticmethod
-    def get_leading_edge(coords: list[Coord], leading_edge_size: int) -> list[Coord]:
-        return coords[-leading_edge_size:]
 
     def print_grid(self):
         for i in range(self.grid.shape[0]):
@@ -103,4 +99,4 @@ if __name__ == "__main__":
         grid2.update_grid(instruction)
     #grid2.print_grid()
     print(f'Part 1: {grid.sum_coords()}')
-    print(f'Part 1: {grid2.sum_coords()}')
+    print(f'Part 2: {grid2.sum_coords()}')

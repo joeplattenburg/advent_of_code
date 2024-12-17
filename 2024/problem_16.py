@@ -15,6 +15,7 @@ direction_mapper = {
     complex(0, -1): 'v'
 }
 
+
 def parse_input(input_path) -> np.ndarray:
     out = []
     with open(input_path, 'r') as f:
@@ -71,4 +72,4 @@ if __name__ == "__main__":
     part1 = min_score
     part2 = len(optimal_nodes)
     print(f'Part 1: {part1}')
-    print(f'Part 1: {part2}')
+    print(f'Part 2: {part2}')
