@@ -70,11 +70,23 @@ if __name__ == "__main__":
     outputs = run_program(program, registers)
     part1 = ','.join(str(o) for o in outputs)
 
-    part2 = 117440
-    registers = deepcopy(registers_initial)
-    registers['A'] = part2
-    outputs = run_program(program, registers)
-    assert outputs == program
-
-    print(f'Part 1: {part1}')
-    print(f'Part 2: {part2}')
+    current_number = ['7'] * 16
+    test_digits = [str(i) for i in range(8)]
+    for position in range(16):
+        for digit in test_digits:
+            current_number[-(position + 1)] = digit
+            print(current_number)
+            registers = deepcopy(registers_initial)
+            registers['A'] = int(''.join(current_number), 8)
+            outputs = run_program(program, registers)
+            if len(outputs) == len(program) and (outputs[position] == program[position]):
+                print('Woo!')
+                break
+    part2 = int(''.join(current_number), 8)
+    print(current_number)
+    print(part2)
+    print(outputs)
+    print(program)
+    # part2 =
+    #print(f'Part 1: {part1}')
+    #print(f'Part 2: {part2}')
