@@ -1,7 +1,9 @@
 import sys
+from typing import Literal
+from functools import cache
+
 import networkx as nx
 import numpy as np
-from itertools import product
 
 
 EDGES = dict[tuple[str, str], str]  # i.e., e[(node, neighbor)] gives the direction
@@ -42,18 +44,18 @@ def get_edges(array: np.ndarray) -> EDGES:
     return out
 
 
-def sequence_to_instructions(seq: str, path_map: PATH_MAP, key_map: EDGES, n: int = 1) -> str:
+@cache
+def sequence_complexity(seq: str, pad: Literal['num', 'dir'] = 'dir', n: int = 1) -> int:
+    path_map, key_map = (num_paths, num_edges) if pad == 'num' else (dir_paths, dir_edges)
     instructions = []
     for source, dest in zip('A' + seq[:-1], seq):
         subpaths: list[PATH] = path_map[source][dest]
-        dirs = [get_dirs(subpath, key_map) for subpath in subpaths]
+        dirs = [get_dirs(subpath, key_map) + 'A' for subpath in subpaths]  # have to press A after every instruction
         instructions.append(dirs)
-        instructions.append(['A'])
-    instructions = [''.join(i) for i in product(*instructions)]
     if n == 1:
-        return min(instructions, key=len)
+        return sum(len(min(i, key=len)) for i in instructions)
     else:
-        return min([sequence_to_instructions(i, path_map=dir_paths, key_map=dir_edges, n=n-1) for i in instructions], key=len)
+        return sum(min(sequence_complexity(ii, n=n-1) for ii in i) for i in instructions)
 
 
 def get_dirs(path: PATH, key_map: EDGES) -> str:
@@ -71,12 +73,7 @@ if __name__ == "__main__":
     dir_g = nx.Graph()
     dir_g.add_edges_from(dir_edges.keys())
     dir_paths: PATH_MAP = {k: v for k, v in nx.all_pairs_all_shortest_paths(dir_g)}
-    part1 = 0
-    for code in codes:
-        inst = sequence_to_instructions(seq=code, path_map=num_paths, key_map=num_edges, n=3)
-        print(inst)
-        print(len(inst))
-        part1 += len(inst) * int(code[:-1])
-    part2 = 0
+    part1 = sum(sequence_complexity(seq=code, pad='num', n=3) * int(code[:-1]) for code in codes)
+    part2 = sum(sequence_complexity(seq=code, pad='num', n=26) * int(code[:-1]) for code in codes)
     print(f'Part 1: {part1}')
     print(f'Part 2: {part2}')
