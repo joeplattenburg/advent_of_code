@@ -70,23 +70,28 @@ if __name__ == "__main__":
     outputs = run_program(program, registers)
     part1 = ','.join(str(o) for o in outputs)
 
-    current_number = ['7'] * 16
+    n_positions = len(program)
+    current_number = ['0'] * n_positions
     test_digits = [str(i) for i in range(8)]
-    for position in range(16):
+    position = 0
+    while position < n_positions:
+        found = False
         for digit in test_digits:
-            current_number[-(position + 1)] = digit
-            print(current_number)
+            current_number[position] = digit
             registers = deepcopy(registers_initial)
             registers['A'] = int(''.join(current_number), 8)
             outputs = run_program(program, registers)
-            if len(outputs) == len(program) and (outputs[position] == program[position]):
-                print('Woo!')
+            if len(outputs) == len(program) and (outputs[-(position + 1)] == program[-(position + 1)]):
+                found = True
                 break
+        if not found:
+            position -= 1
+            last_tested = int(current_number[position])
+            test_digits = [str(i) for i in range(last_tested + 1, 8)]
+        else:
+            position += 1
+            test_digits = [str(i) for i in range(8)]
+    assert program == outputs
     part2 = int(''.join(current_number), 8)
-    print(current_number)
-    print(part2)
-    print(outputs)
-    print(program)
-    # part2 =
-    #print(f'Part 1: {part1}')
-    #print(f'Part 2: {part2}')
+    print(f'Part 1: {part1}')
+    print(f'Part 2: {part2}')
