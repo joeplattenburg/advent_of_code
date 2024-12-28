@@ -42,9 +42,9 @@ def count_quadrants(screen_size: tuple[int, int], locs: dict[tuple[int, int], in
 
 def print_screen(screen: np.ndarray, counter: int) -> bool:
     check = any(['0000000000' in ''.join(screen[i, :].tolist()) for i in range(screen.shape[0])])
-    if check:
-        for i in range(screen.shape[0]):
-            print(''.join(screen[i, :].tolist()))
+    # if check:
+    #     for i in range(screen.shape[0]):
+    #         print(''.join(screen[i, :].tolist()))
     return check
 
 

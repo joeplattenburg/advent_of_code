@@ -21,3 +21,4 @@ if __name__ == "__main__":
     locks, keys, space = parse_input(input_path)
     part1 = sum(all((lock + key) <= space) for key in keys for lock in locks)
     print(f'Part 1: {part1}')
+    print(f'Part 2: Done!')

@@ -81,7 +81,7 @@ if __name__ == "__main__":
     part2 = 0
     test_locs = [tuple(t) for t in np.argwhere(grid.grid == 'X').tolist()]
     for i, loc in enumerate(test_locs):
-        print(f'Testing loc {i + 1} of {len(test_locs)}...')
+        #print(f'Testing loc {i + 1} of {len(test_locs)}...')
         grid.reset()
         grid.add_obstruction(loc)
         grid.walk()
