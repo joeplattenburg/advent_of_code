@@ -14,23 +14,14 @@ def size(a: coord, b: coord) -> int:
 
 
 def intersect(square: tuple[coord, coord], segment: tuple[coord, coord]):
-    direction = 'h' if segment[0][1] == segment[1][1] else 'v'
-    if direction == 'h':
-        return (
-            (square[0][1] < segment[0][1] < square[1][1])
-            and not (
-                (segment[0][0] <= square[0][0] and segment[1][0] <= square[0][0]) or
-                (segment[0][0] >= square[1][0] and segment[1][0] >= square[1][0])
-            )
+    i = 0 if segment[0][1] == segment[1][1] else 1
+    return (
+        (square[0][1 - i] < segment[0][1 - i] < square[1][1 - i])
+        and not (
+            (segment[0][i] <= square[0][i] and segment[1][i] <= square[0][i]) or
+            (segment[0][i] >= square[1][i] and segment[1][i] >= square[1][i])
         )
-    else:
-        return (
-            (square[0][0] < segment[0][0] < square[1][0])
-            and not (
-                (segment[0][1] <= square[0][1] and segment[1][1] <= square[0][1]) or
-                (segment[0][1] >= square[1][1] and segment[1][1] >= square[1][1])
-            )
-        )
+    )
 
 
 def any_intersect(a: coord, b: coord, segments: list[tuple[coord, coord]]) -> bool:
